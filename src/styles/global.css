@@ -42,16 +42,3 @@ html.gray {
 * {
   scrollbar-width: thin;
 }
-
-.aplayer.aplayer-fixed,
-.aplayer.aplayer-fixed .aplayer-body {
-  max-width: none !important;
-  width: 400px !important;
-  left: 1rem !important;
-  bottom: 1.5rem !important;
-  right: auto !important;
-}
-
-.aplayer * {
-  color: #666;
-}

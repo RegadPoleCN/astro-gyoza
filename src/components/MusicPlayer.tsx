@@ -1,18 +1,46 @@
+import { useEffect } from 'react';
+
 import 'APlayer/dist/APlayer.min.css';
 import APlayer from 'APlayer';
+import qs from 'qs';
+import { player as playerConfig } from '@/config.json';
 
-export function Music() {
-    const ap = new APlayer({
+export default function Music() {
+    useEffect(()=>{
+        getPlayer();
+    })
+}
+
+async function getPlayer() {
+    let params = {
+        server: playerConfig.server,
+        type: playerConfig.type,
+        id: playerConfig.id,
+        r: Math.random()
+    };
+    let url;
+    if(!playerConfig.api || playerConfig.api.trim().length === 0) {
+        url = 'https://api.i-meto.com/meting/api';
+    } else {
+        url = playerConfig.api;
+    }
+    //拼接参数  
+    url += '?' + qs.stringify(params, { strictNullHandling: true });
+    // ?server=netease&type=playlist&id=60192&r=0.49295886527008737
+    let res = await fetch(url, {});
+    let data = await res.json();
+    let player = new APlayer({
         element: document.getElementById('aplayer'),
-        showlrc: false,
         fixed: true,
         mini: true,
-        audio: {
-            title: '半岛铁盒',
-            author: '周杰伦',
-            url: 'https://echeverra.cn/wp-content/uploads/2022/05/周杰伦-半岛铁盒.mp3',
-            pic: 'https://echeverra.cn/wp-content/uploads/2022/05/周杰伦-半岛铁盒-mp3-image.png'
-        }
+        lrcType: 3,
+        preload: 'none',
+        audio: [...data.map((el: { lrc: any; title: any; author: any; url: any; pic: any; }) => ({
+            lrc: el.lrc,
+            name: el.title,
+            artist: el.author,
+            url: el.url,
+            cover: el.pic,
+        }))],
     });
-    ap.init();
 }

@@ -115,5 +115,11 @@
     "microsoftClarity": {
       "projectId": ""
     }
+  },
+  "player": {
+    "api": "https://meting.regadpole.top/api",
+    "server": "netease",
+    "type": "playlist",
+    "id": "60192"
   }
 }
