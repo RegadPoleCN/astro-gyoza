@@ -31,6 +31,9 @@ async function getPlayer() {
     let data = await res.json();
     new APlayer({
         element: document.getElementById('aplayer'),
+        autoplay: false,
+        theme: '#ffacd8ff',
+        loop: 'all',
         fixed: true,
         mini: true,
         lrcType: 3,
