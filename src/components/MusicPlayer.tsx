@@ -29,7 +29,7 @@ async function getPlayer() {
     // ?server=netease&type=playlist&id=60192&r=0.49295886527008737
     let res = await fetch(url, {});
     let data = await res.json();
-    let player = new APlayer({
+    new APlayer({
         element: document.getElementById('aplayer'),
         fixed: true,
         mini: true,
