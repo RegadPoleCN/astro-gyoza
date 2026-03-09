@@ -4,6 +4,7 @@ import { author, footer } from '@/config.json'
 import { getAllPostsWordCount } from '@/utils/content'
 import { RunningDays } from './RunningDays'
 import Link from './Link.astro'
+import FooterColumn from './FooterColumn.astro'
 
 const sinceYear = new Date(footer.startTime).getFullYear()
 const thisYear = new Date().getFullYear()
@@ -15,6 +16,16 @@ const wordCountStr = (wordCount / 1000).toFixed(1) + 'k'
 ---
 
 <footer class="relative z-1 py-8 px-4 md:px-8 border-t border-primary text-secondary text-sm">
+  {
+    footer.columns && footer.columns.length > 0 && (
+      <div class="mb-8 mx-auto w-fit grid grid-cols-1 md:grid-cols-3 gap-8">
+        {footer.columns.map((column) => (
+          <FooterColumn title={column.title} links={column.links} />
+        ))}
+      </div>
+    )
+  }
+
   <div class="text-center space-y-2">
     <div>
       Powered by

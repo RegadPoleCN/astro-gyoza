@@ -95,7 +95,33 @@
     "perPage": 10
   },
   "footer": {
-    "startTime": "2024-04-14T00:00:00Z"
+    "startTime": "2024-04-14T00:00:00Z",
+    "columns": [
+      {
+        "title": "关于",
+        "links": [
+          { "label": "博客", "url": "/" },
+          { "label": "归档", "url": "/archives" },
+          { "label": "项目", "url": "/projects" }
+        ]
+      },
+      {
+        "title": "社交",
+        "links": [
+          { "label": "GitHub", "url": "https://github.com/lxchapu/astro-gyoza" },
+          { "label": "Twitter", "url": "https://twitter.com/lxchapu" },
+          { "label": "Email", "url": "mailto:lxchapu@outlook.com" }
+        ]
+      },
+      {
+        "title": "资源",
+        "links": [
+          { "label": "RSS", "url": "/rss.xml" },
+          { "label": "站点地图", "url": "/sitemap-index.xml" },
+          { "label": "Astro", "url": "https://astro.build/" }
+        ]
+      }
+    ]
   },
   "waline": {
     "serverURL": "https://waline.lxchapu.com"

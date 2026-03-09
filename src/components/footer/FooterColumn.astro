@@ -1,0 +1,23 @@
+---
+import Link from './Link.astro'
+
+interface Props {
+  title: string
+  links: Array<{ label: string; url: string }>
+}
+
+const { title, links } = Astro.props
+---
+
+<div class="space-y-2">
+  <h3 class="font-semibold text-primary">{title}</h3>
+  <ul class="space-y-1">
+    {
+      links.map((link) => (
+        <li>
+          <Link href={link.url}>{link.label}</Link>
+        </li>
+      ))
+    }
+  </ul>
+</div>
