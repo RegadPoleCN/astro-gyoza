@@ -13,7 +13,6 @@ import Music from '@/components/MusicPlayer'
 import { site } from '@/config.json'
 import '@/styles/global.css'
 import '@/styles/player.css'
-import 'APlayer/dist/APlayer.min.css'
 
 interface Props {
   title?: string
@@ -36,7 +35,6 @@ const { title, description, image } = Astro.props
   <body>
     <slot />
     <Music client:only="react" />
-    <div id="aplayer" class="fixed left-4 bottom-6 z-10"></div>
     <BackToTopFAB client:only="react" />
     <ToastContainer client:only="react" />
     <ModalStack client:only="react" />
