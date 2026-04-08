@@ -22,6 +22,11 @@ interface LyricLine {
   text: string
 }
 
+interface LyricsPosition {
+  x: number
+  y: number
+}
+
 let playerInstance: any = null
 
 export default function MusicPlayer() {
@@ -42,6 +47,11 @@ export default function MusicPlayer() {
   const [showPlaylist, setShowPlaylist] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [renderKey, setRenderKey] = useState(0)
+  
+  // 桌面歌词相关状态
+  const [lyricsPosition, setLyricsPosition] = useState<LyricsPosition>({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
 
   // 初始化播放器
   useEffect(() => {
@@ -363,6 +373,110 @@ export default function MusicPlayer() {
   }
 
   const currentLyricIndex = getCurrentLyricIndex()
+  
+  // 获取当前和下一句歌词
+  const getCurrentAndNextLyric = () => {
+    if (lyrics.length === 0 || currentLyricIndex === -1) {
+      return { currentLyric: '', nextLyric: '' }
+    }
+    
+    const currentLyric = lyrics[currentLyricIndex]?.text || ''
+    const nextLyric = lyrics[currentLyricIndex + 1]?.text || ''
+    
+    return { currentLyric, nextLyric }
+  }
+  
+  const { currentLyric, nextLyric } = getCurrentAndNextLyric()
+
+  // 初始化歌词位置和设置
+  useEffect(() => {
+    // 初始化位置
+    const savedPosition = localStorage.getItem('lyrics-position')
+    if (savedPosition) {
+      try {
+        const pos = JSON.parse(savedPosition)
+        // 确保在视口内
+        if (pos.x > window.innerWidth) pos.x = window.innerWidth - 400
+        if (pos.y > window.innerHeight) pos.y = window.innerHeight - 100
+        setLyricsPosition(pos)
+      } catch (e) {
+        console.error('Failed to load lyrics position:', e)
+      }
+    } else {
+      // 默认位置
+      if (window.innerWidth < 768) {
+        setLyricsPosition({ x: 20, y: window.innerHeight - 200 })
+      } else {
+        setLyricsPosition({ x: window.innerWidth - 400, y: 80 })
+      }
+    }
+    
+    // 初始化歌词可见性
+    const savedLyricsVisible = localStorage.getItem('lyrics-visible')
+    if (savedLyricsVisible !== null) {
+      setShowLyrics(savedLyricsVisible === 'true')
+    }
+  }, [])
+  
+  // 保存歌词位置
+  useEffect(() => {
+    localStorage.setItem('lyrics-position', JSON.stringify(lyricsPosition))
+  }, [lyricsPosition])
+  
+  // 拖拽功能 - 使用 ref 保存最新的 dragOffset
+  const dragOffsetRef = useRef(dragOffset)
+  
+  useEffect(() => {
+    dragOffsetRef.current = dragOffset
+  }, [dragOffset])
+  
+  const startDrag = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+    
+    setDragOffset({
+      x: clientX - lyricsPosition.x,
+      y: clientY - lyricsPosition.y,
+    })
+  }
+  
+  // 添加和移除事件监听器
+  useEffect(() => {
+    const onDrag = (e: MouseEvent | TouchEvent) => {
+      if (e.type === 'touchmove') {
+        e.preventDefault()
+      }
+      
+      const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
+      const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
+      
+      setLyricsPosition({
+        x: clientX - dragOffsetRef.current.x,
+        y: clientY - dragOffsetRef.current.y,
+      })
+    }
+    
+    const stopDrag = () => {
+      setIsDragging(false)
+    }
+    
+    if (isDragging) {
+      window.addEventListener('mousemove', onDrag)
+      window.addEventListener('mouseup', stopDrag)
+      window.addEventListener('touchmove', onDrag, { passive: false })
+      window.addEventListener('touchend', stopDrag)
+    }
+    
+    return () => {
+      window.removeEventListener('mousemove', onDrag)
+      window.removeEventListener('mouseup', stopDrag)
+      window.removeEventListener('touchmove', onDrag)
+      window.removeEventListener('touchend', stopDrag)
+    }
+  }, [isDragging])
 
   // 自动滚动歌词
   useEffect(() => {
@@ -388,6 +502,39 @@ export default function MusicPlayer() {
 
   return (
     <>
+      {/* 桌面歌词窗口 */}
+      {showLyrics && (
+        <div
+          className="desktop-lyrics-container"
+          style={{ top: lyricsPosition.y + 'px', left: lyricsPosition.x + 'px' }}
+          onMouseDown={startDrag}
+          onTouchStart={startDrag}
+        >
+          {currentLyric || nextLyric ? (
+            <div className="lyrics-wrapper">
+              <div
+                key={currentLyric}
+                className="lyric-line current"
+              >
+                {currentLyric || '...'}
+              </div>
+              {nextLyric && (
+                <div
+                  key={nextLyric}
+                  className="lyric-line next"
+                >
+                  {nextLyric}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="lyrics-placeholder">
+              Waiting for lyrics...
+            </div>
+          )}
+        </div>
+      )}
+      
       {/* 迷你模式 - 唱片 */}
       {!isExpanded && (
         <div className="mini-player-wrapper">
@@ -400,16 +547,6 @@ export default function MusicPlayer() {
               style={{ backgroundImage: `url(${currentAudio?.cover || ''})` }}
             />
           </div>
-          {/* 迷你模式下的歌词 */}
-          {showLyrics && currentAudio && (
-            <div className="mini-lyrics">
-              {currentLyricIndex >= 0 && lyrics[currentLyricIndex] ? (
-                <span>{lyrics[currentLyricIndex].text}</span>
-              ) : (
-                <span>{currentAudio.name} - {currentAudio.artist}</span>
-              )}
-            </div>
-          )}
         </div>
       )}
 
@@ -425,42 +562,43 @@ export default function MusicPlayer() {
             <div className="player-overlay" />
           </div>
           
+          {/* 播放列表面板 - 与关闭栏同一层级 */}
+          <div className={`playlist-panel ${showPlaylist ? 'show' : ''}`}>
+            <div className="playlist-header">
+              <span className="playlist-title">播放列表 ({audioList.length})</span>
+              <button 
+                className="playlist-close"
+                onClick={() => setShowPlaylist(false)}
+                title="关闭列表"
+              >
+                ×
+              </button>
+            </div>
+            <div className="playlist-content">
+              {audioList.map((song, index) => (
+                <div
+                  key={index}
+                  className={`playlist-item ${index === currentIndex ? 'active' : ''}`}
+                  onClick={() => selectSong(index)}
+                >
+                  <div 
+                    className="playlist-item-cover"
+                    style={{ backgroundImage: `url(${song.cover})` }}
+                  />
+                  <div className="playlist-item-info">
+                    <div className="playlist-item-title">{song.name}</div>
+                    <div className="playlist-item-artist">{song.artist}</div>
+                  </div>
+                  {index === currentIndex && (
+                    <span className="playlist-item-playing">♫</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          
           {/* 内容区域 - 在遮罩层之上 */}
           <div className="player-content">
-            {/* 播放列表面板 */}
-            <div className={`playlist-panel ${showPlaylist ? 'show' : ''}`}>
-              <div className="playlist-header">
-                <span className="playlist-title">播放列表 ({audioList.length})</span>
-                <button 
-                  className="playlist-close"
-                  onClick={() => setShowPlaylist(false)}
-                  title="关闭列表"
-                >
-                  ×
-                </button>
-              </div>
-              <div className="playlist-content">
-                {audioList.map((song, index) => (
-                  <div
-                    key={index}
-                    className={`playlist-item ${index === currentIndex ? 'active' : ''}`}
-                    onClick={() => selectSong(index)}
-                  >
-                    <div 
-                      className="playlist-item-cover"
-                      style={{ backgroundImage: `url(${song.cover})` }}
-                    />
-                    <div className="playlist-item-info">
-                      <div className="playlist-item-title">{song.name}</div>
-                      <div className="playlist-item-artist">{song.artist}</div>
-                    </div>
-                    {index === currentIndex && (
-                      <span className="playlist-item-playing">♫</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {/* 顶部关闭按钮行 */}
             {!showPlaylist && (
@@ -475,24 +613,6 @@ export default function MusicPlayer() {
                 </button>
               </div>
             )}
-
-            {/* 歌词区域 */}
-            <div className={`lyrics-container ${!showLyrics ? 'hidden' : ''}`}>
-              {showLyrics && (
-                lyrics.length > 0 ? (
-                  lyrics.map((line, index) => (
-                    <div
-                      key={index}
-                      className={`lyric-line ${index === currentLyricIndex ? 'current' : ''}`}
-                    >
-                      {line.text}
-                    </div>
-                  ))
-                ) : (
-                  <div className="no-lyrics">纯音乐</div>
-                )
-              )}
-            </div>
 
             {/* 歌曲信息 */}
             <div className="song-info" key={`song-info-${currentIndex}-${renderKey}`}>
@@ -515,6 +635,7 @@ export default function MusicPlayer() {
                   title={showLyrics ? '隐藏歌词' : '显示歌词'}
                 >
                   🎵
+                  {!showLyrics && <span className="slash">/</span>}
                 </button>
                 <button 
                   className="playlist-btn"
