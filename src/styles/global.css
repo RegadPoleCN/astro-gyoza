@@ -42,3 +42,68 @@ html.gray {
 * {
   scrollbar-width: thin;
 }
+
+.mermaid-container {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  margin: 1rem 0;
+  box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.08);
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
+}
+
+[data-theme='dark'] .mermaid-container {
+  box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.4);
+  background-color: #1a1a1f;
+  border-color: #3a3a40;
+}
+
+.mermaid-svg {
+  padding: 1.5rem;
+  min-height: 120px;
+  background-color: #ffffff;
+}
+
+[data-theme='dark'] .mermaid-svg {
+  background-color: #1a1a1f;
+}
+
+[data-theme='dark'] .mermaid-svg .legend text,
+[data-theme='dark'] .mermaid-svg text,
+[data-theme='dark'] .mermaid-svg .legend,
+[data-theme='dark'] .mermaid-svg .pieTitleText,
+[data-theme='dark'] .mermaid-svg .messageText {
+  fill: #e1e4e8 !important;
+}
+
+[data-theme='dark'] .mermaid-svg line,
+[data-theme='dark'] .mermaid-svg .flowchart-link,
+[data-theme='dark'] .mermaid-svg .relation,
+[data-theme='dark'] .mermaid-svg .transition,
+[data-theme='dark'] .mermaid-svg .relationshipLine {
+  stroke: #e1e4e8 !important;
+}
+
+[data-theme='dark'] .mermaid-svg [id$='head'] path,
+[data-theme='dark'] .mermaid-svg [id$='End'] path,
+[data-theme='dark'] .mermaid-svg [id$='Start'] path,
+[data-theme='dark'] .mermaid-svg .state-start {
+  stroke: #e1e4e8 !important;
+  fill: #e1e4e8 !important;
+}
+
+.mermaid-svg svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 640px) {
+  .mermaid-container {
+    margin: 0.75rem -1rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+}
