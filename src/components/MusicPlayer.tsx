@@ -7,7 +7,6 @@ import { player as playerConfig } from '@/config.json'
 import { themeAtom } from '@/store/theme'
 import { getSystemTheme } from '@/utils/theme'
 
-
 interface AudioType {
   name: string
   artist: string
@@ -52,7 +51,7 @@ export default function MusicPlayer() {
 
   const [lyricsSettings, setLyricsSettings] = useState<{ fontSize: number; color: string }>({
     fontSize: 28,
-    color: '#ffffff'
+    color: '#ffffff',
   })
 
   const [contextMenuVisible, setContextMenuVisible] = useState(false)
@@ -123,7 +122,7 @@ export default function MusicPlayer() {
         setCurrentAudio(firstSong)
         setCurrentIndex(0)
         await parseLyrics(data[0].lrc)
-        setRenderKey(prev => prev + 1)
+        setRenderKey((prev) => prev + 1)
       }
     } catch (error) {
       console.error('Failed to initialize player:', error)
@@ -182,7 +181,7 @@ export default function MusicPlayer() {
       setCurrentIndex(index)
       setCurrentAudio({ ...songData })
       await parseLyrics(songData.lrc)
-      setRenderKey(prev => prev + 1)
+      setRenderKey((prev) => prev + 1)
     }
 
     audio.addEventListener('switchaudio', handleSongSwitch)
@@ -234,7 +233,7 @@ export default function MusicPlayer() {
     }
 
     const fixedLyrics = validateAndFixLyrics(actualLyrics)
-    const lines = fixedLyrics.split('\n').filter(line => line.trim())
+    const lines = fixedLyrics.split('\n').filter((line) => line.trim())
 
     const parsed = lines
       .map((line: string) => {
@@ -343,11 +342,11 @@ export default function MusicPlayer() {
   }, [contextMenuVisible])
 
   const updateFontSize = (size: number) => {
-    setLyricsSettings(prev => ({ ...prev, fontSize: Math.max(16, Math.min(64, size)) }))
+    setLyricsSettings((prev) => ({ ...prev, fontSize: Math.max(16, Math.min(64, size)) }))
   }
 
   const updateColor = (color: string) => {
-    setLyricsSettings(prev => ({ ...prev, color }))
+    setLyricsSettings((prev) => ({ ...prev, color }))
   }
 
   // 初始化歌词位置和设置（从 localStorage 读取）
@@ -381,7 +380,7 @@ export default function MusicPlayer() {
         const settings = JSON.parse(savedLyricsSettings)
         setLyricsSettings({
           fontSize: Math.max(16, Math.min(64, settings.fontSize || 28)),
-          color: settings.color || '#ffffff'
+          color: settings.color || '#ffffff',
         })
       } catch (e) {
         console.error('Failed to load lyrics settings:', e)
@@ -462,11 +461,11 @@ export default function MusicPlayer() {
         const lineOffset = (currentLine as HTMLElement).offsetTop
         const lineHeight = (currentLine as HTMLElement).clientHeight
 
-        const scrollPosition = lineOffset - (containerHeight / 2) + (lineHeight / 2)
+        const scrollPosition = lineOffset - containerHeight / 2 + lineHeight / 2
 
         lyricsContainer.scrollTo({
           top: scrollPosition,
-          behavior: 'smooth'
+          behavior: 'smooth',
         })
       }
     }
@@ -481,7 +480,7 @@ export default function MusicPlayer() {
       setCurrentIndex(index)
       setCurrentAudio({ ...songData })
       await parseLyrics(songData.lrc)
-      setRenderKey(prev => prev + 1)
+      setRenderKey((prev) => prev + 1)
 
       playerInstance.switchAudio(index)
 
@@ -503,37 +502,31 @@ export default function MusicPlayer() {
       {showLyrics && (
         <div
           className="desktop-lyrics-container"
-          style={{
-            top: lyricsPosition.y + 'px',
-            left: lyricsPosition.x + 'px',
-            '--lyrics-font-size': `${lyricsSettings.fontSize}px`,
-            '--lyrics-color': lyricsSettings.color,
-          } as React.CSSProperties}
+          style={
+            {
+              top: lyricsPosition.y + 'px',
+              left: lyricsPosition.x + 'px',
+              '--lyrics-font-size': `${lyricsSettings.fontSize}px`,
+              '--lyrics-color': lyricsSettings.color,
+            } as React.CSSProperties
+          }
           onMouseDown={startDrag}
           onTouchStart={startDrag}
           onContextMenu={handleContextMenu}
         >
           {currentLyric || nextLyric ? (
             <div className="lyrics-wrapper">
-              <div
-                key={currentLyric}
-                className="lyric-line current"
-              >
+              <div key={currentLyric} className="lyric-line current">
                 {currentLyric || '...'}
               </div>
               {nextLyric && (
-                <div
-                  key={nextLyric}
-                  className="lyric-line next"
-                >
+                <div key={nextLyric} className="lyric-line next">
                   {nextLyric}
                 </div>
               )}
             </div>
           ) : (
-            <div className="lyrics-placeholder">
-              Waiting for lyrics...
-            </div>
+            <div className="lyrics-placeholder">Waiting for lyrics...</div>
           )}
 
           {/* 右键菜单 */}
@@ -627,9 +620,7 @@ export default function MusicPlayer() {
                     <div className="playlist-item-title">{song.name}</div>
                     <div className="playlist-item-artist">{song.artist}</div>
                   </div>
-                  {index === currentIndex && (
-                    <span className="playlist-item-playing">♫</span>
-                  )}
+                  {index === currentIndex && <span className="playlist-item-playing">♫</span>}
                 </div>
               ))}
             </div>
@@ -637,16 +628,11 @@ export default function MusicPlayer() {
 
           {/* 内容区域 */}
           <div className="player-content">
-
             {/* 顶部关闭按钮行 */}
             {!showPlaylist && (
               <div className="player-top-bar">
                 <div className="player-top-spacer" />
-                <button
-                  className="player-close"
-                  onClick={() => setIsExpanded(false)}
-                  title="关闭"
-                >
+                <button className="player-close" onClick={() => setIsExpanded(false)} title="关闭">
                   ×
                 </button>
               </div>
@@ -681,7 +667,7 @@ export default function MusicPlayer() {
                   title="播放列表"
                 >
                   <svg viewBox="0 0 24 24">
-                    <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                    <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
                   </svg>
                 </button>
               </div>
@@ -708,25 +694,29 @@ export default function MusicPlayer() {
             <div className="controls">
               <button className="control-btn" onClick={skipPrev} title="上一首">
                 <svg viewBox="0 0 24 24">
-                  <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                  <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
                 </svg>
               </button>
 
-              <button className="control-btn main" onClick={togglePlay} title={isPlaying ? '暂停' : '播放'}>
+              <button
+                className="control-btn main"
+                onClick={togglePlay}
+                title={isPlaying ? '暂停' : '播放'}
+              >
                 {isPlaying ? (
                   <svg viewBox="0 0 24 24">
-                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                   </svg>
                 ) : (
                   <svg viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z"/>
+                    <path d="M8 5v14l11-7z" />
                   </svg>
                 )}
               </button>
 
               <button className="control-btn" onClick={skipNext} title="下一首">
                 <svg viewBox="0 0 24 24">
-                  <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                  <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
                 </svg>
               </button>
             </div>

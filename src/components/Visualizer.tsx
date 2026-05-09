@@ -34,8 +34,8 @@ export function Visualizer({ audioElement, enabled = true }: VisualizerProps) {
 
         if (!sourceRef.current) {
           const analyser = audioContext.createAnalyser()
-          analyser.fftSize = 128  // 降低 FFT 大小以提升性能
-          analyser.smoothingTimeConstant = 0.85  // 保持平滑度
+          analyser.fftSize = 128 // 降低 FFT 大小以提升性能
+          analyser.smoothingTimeConstant = 0.85 // 保持平滑度
 
           const source = audioContext.createMediaElementSource(audioElement)
           source.connect(analyser)
@@ -87,24 +87,35 @@ export function Visualizer({ audioElement, enabled = true }: VisualizerProps) {
 
       for (let i = 0; i < bufferLength; i++) {
         const barHeight = (dataArray[i] / 255) * canvas.height
-        
+
         // 创建渐变色
         const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight)
-        
+
         // 根据频率调整颜色亮度
         const brightness = 0.6 + (dataArray[i] / 255) * 0.4
-        gradient.addColorStop(0, `rgb(${Math.floor(baseColor.r * brightness)}, ${Math.floor(baseColor.g * brightness)}, ${Math.floor(baseColor.b * brightness)})`)
-        gradient.addColorStop(1, `rgb(${Math.floor(baseColor.r * 0.5)}, ${Math.floor(baseColor.g * 0.5)}, ${Math.floor(baseColor.b * 0.5)})`)
-        
+        gradient.addColorStop(
+          0,
+          `rgb(${Math.floor(baseColor.r * brightness)}, ${Math.floor(baseColor.g * brightness)}, ${Math.floor(baseColor.b * brightness)})`,
+        )
+        gradient.addColorStop(
+          1,
+          `rgb(${Math.floor(baseColor.r * 0.5)}, ${Math.floor(baseColor.g * 0.5)}, ${Math.floor(baseColor.b * 0.5)})`,
+        )
+
         ctx.fillStyle = gradient
         ctx.globalAlpha = 0.9
-        
+
         // 绘制圆角条形
         const radius = Math.min(barWidth / 2 - 1, 4)
         ctx.beginPath()
         ctx.moveTo(x + radius, canvas.height - barHeight)
         ctx.lineTo(x + barWidth - radius, canvas.height - barHeight)
-        ctx.quadraticCurveTo(x + barWidth, canvas.height - barHeight, x + barWidth, canvas.height - barHeight + radius)
+        ctx.quadraticCurveTo(
+          x + barWidth,
+          canvas.height - barHeight,
+          x + barWidth,
+          canvas.height - barHeight + radius,
+        )
         ctx.lineTo(x + barWidth, canvas.height)
         ctx.lineTo(x, canvas.height)
         ctx.lineTo(x, canvas.height - barHeight + radius)
