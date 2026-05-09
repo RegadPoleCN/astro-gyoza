@@ -1,4 +1,6 @@
 ---
+import MermaidInitializer from './MermaidInitializer'
+
 interface Props {
   class?: string
 }
@@ -7,5 +9,6 @@ const { class: className } = Astro.props
 ---
 
 <article id="markdown-wrapper" class="markdown" class:list={[className]}>
+  <MermaidInitializer client:load />
   <slot />
 </article>

@@ -16,6 +16,7 @@ import { rehypeHeadingIds } from '@astrojs/markdown-remark'
 import { site } from './src/config.json'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
+import { rehypeMermaid } from './src/plugins/rehypeMermaid'
 import swup from '@swup/astro'
 
 // https://astro.build/config
@@ -39,6 +40,7 @@ export default defineConfig({
     rehypePlugins: [
       rehypeHeadingIds,
       rehypeKatex,
+      rehypeMermaid, // Mermaid 必须在代码高亮之前处理
       rehypeLink,
       rehypeImage,
       rehypeHeading,
