@@ -4,11 +4,11 @@ import { SocialList } from './SocialList'
 import Highlight from '@/components/Highlight.astro'
 ---
 
-<div class="lg:-mt-16 lg:h-dvh lg:min-h-[720px]">
+<div class="lg:-mt-16 lg:h-dvh lg:min-h-[720px] glass-card mx-4 my-4 p-6">
   <div
     class="relative max-w-[1300px] mx-auto h-full px-4 grid lg:grid-cols-2 items-center justify-items-center"
   >
-    <div class="mt-[120px] lg:mt-0 max-w-[590px]">
+    <div class="mt-[120px] lg:mt-0 max-w-[590px] glass-card p-6">
       <h1 class="text-3xl text-center lg:text-left text-balance">
         Hi there, I'm <Highlight class="font-bold">{hero.name}</Highlight>👋<br />{hero.bio}
       </h1>
@@ -23,11 +23,11 @@ import Highlight from '@/components/Highlight.astro'
       </div>
     </div>
 
-    <div class="mt-10 lg:mt-0 lg:absolute inset-x-0 bottom-0 flex flex-col items-center">
+    <div class="mt-10 lg:mt-0 lg:absolute inset-x-0 bottom-0 flex flex-col items-center glass-card p-4 mx-4 mb-4">
       <p class="text-xs text-center text-balance text-secondary">
         {hero.yiyan}
       </p>
-      <div class="mt-7 text-xl animate-bounce">
+      <div class="mt-4 text-xl">
         <i class="iconfont icon-down"></i>
       </div>
     </div>

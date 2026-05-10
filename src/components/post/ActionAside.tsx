@@ -35,7 +35,7 @@ const shareList = [
 export function ActionAside() {
   return (
     <div
-      className="absolute left-0 bottom-0 flex flex-col gap-4"
+      className="absolute left-0 bottom-0 flex flex-col gap-4 glass-card p-3"
       style={{
         transform: 'translateY(calc(100% + 24px))',
       }}
