@@ -23,6 +23,7 @@
 ::selection {
   background-color: theme('colors.accent');
   color: white;
+  text-shadow: none;
 }
 
 [data-theme='dark'] ::selection {
@@ -33,6 +34,26 @@ html {
   color: theme('textColor.primary');
   background-color: theme('backgroundColor.root');
   scroll-padding-top: 64px;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+body {
+  position: relative;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  z-index: 1;
+  pointer-events: none;
 }
 
 html.gray {
@@ -41,6 +62,25 @@ html.gray {
 
 * {
   scrollbar-width: thin;
+  scrollbar-color: rgba(var(--color-text-secondary), 0.3) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(var(--color-text-secondary), 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(var(--color-text-secondary), 0.5);
 }
 
 .mermaid-container {
@@ -106,4 +146,128 @@ html.gray {
     border-left: none;
     border-right: none;
   }
+
+  body::before {
+    opacity: 0.015;
+  }
+
+  html {
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(var(--color-accent), 0.03) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(var(--color-accent), 0.02) 0%, transparent 50%);
+  }
+
+  [data-theme='dark'] html {
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(var(--color-accent), 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(var(--color-accent), 0.03) 0%, transparent 50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body {
+    transition: none;
+  }
+
+  .animate-gradient-shift {
+    animation: none !important;
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    transform: rotate(0deg) scale(1.5);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.8);
+  }
+  100% {
+    transform: rotate(360deg) scale(1.5);
+  }
+}
+
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-shift {
+  animation: gradient-shift 30s linear infinite;
+  transform-origin: center center;
+}
+
+.slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid theme('borderColor.primary');
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.slider-input::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.slider-input:active::-webkit-slider-thumb {
+  transform: scale(1.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.slider-input::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid theme('borderColor.primary');
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.slider-input::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.slider-input:active::-moz-range-thumb {
+  transform: scale(1.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 640px) {
+  .slider-input::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+  }
+
+  .slider-input::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.glass-card {
+  background: rgb(var(--color-bg-primary) / 0.75);
+  backdrop-filter: blur(12px) saturate(1.5);
+  -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  border-radius: 1rem;
+  border: 1px solid rgb(var(--color-border-primary) / 0.15);
 }
