@@ -31,6 +31,10 @@ const config: Config = {
     extend: {
       colors: {
         accent: 'rgb(var(--color-accent) / <alpha-value>)',
+        atmosphere: {
+          light: 'rgba(var(--color-atmosphere-light) / <alpha-value>)',
+          dark: 'rgba(var(--color-atmosphere-dark) / <alpha-value>)',
+        },
       },
       textColor: {
         primary: 'rgb(var(--color-text-primary))',
@@ -49,9 +53,23 @@ const config: Config = {
       },
       transitionProperty: {
         'bg-color': 'background-color',
+        theme: 'background-color, color, border-color',
+      },
+      animation: {
+        'subtle-pulse': 'subtle-pulse 8s ease-in-out infinite',
+      },
+      keyframes: {
+        'subtle-pulse': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.7' },
+        },
       },
       zIndex: {
+        '-2': '-2',
+        '-1': '-1',
         '1': '1',
+        '50': '50',
+        '100': '100',
       },
     },
   },
