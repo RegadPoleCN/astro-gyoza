@@ -7,7 +7,7 @@ export function BackToTopFAB() {
   const isShow = scrollY > 100
 
   return (
-    <div className="fixed right-4 bottom-6 z-10">
+    <div className="fixed right-4 bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] z-10">
       <AnimatePresence>{isShow && <BackToTop />}</AnimatePresence>
     </div>
   )
