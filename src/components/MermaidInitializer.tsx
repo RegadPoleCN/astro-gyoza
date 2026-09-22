@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, lazy, Suspense } from 'react'
 import { createPortal } from 'react-dom'
 import { useAtomValue } from 'jotai'
-import MermaidRenderer from './MermaidRenderer'
 import { themeAtom } from '@/store/theme'
 import { useDebounceValue } from '@/hooks/useDebounceValue'
+
+const MermaidRenderer = lazy(() => import('./MermaidRenderer'))
 
 interface MermaidTarget {
   id: string
@@ -84,19 +85,21 @@ const MermaidInitializer = () => {
     return () => document.removeEventListener('swup:content:replaced', handler)
   }, [scan])
 
+  if (targets.length === 0) return null
+
   return (
-    <>
+    <Suspense fallback={null}>
       {targets.map((target) =>
         createPortal(
           <MermaidRenderer
-            key={`${target.id}-${currentTheme}`}
+            key={target.id}
             code={target.code}
             theme={currentTheme}
           />,
           target.element,
         ),
       )}
-    </>
+    </Suspense>
   )
 }
 

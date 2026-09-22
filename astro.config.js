@@ -52,6 +52,7 @@ export default defineConfig({
   },
   vite: {
     build: {
+      chunkSizeWarningLimit: 700,
       rollupOptions: {
         external: ['/pagefind/pagefind.js'],
       },
