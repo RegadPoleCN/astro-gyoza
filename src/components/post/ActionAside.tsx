@@ -46,6 +46,22 @@ export function ActionAside() {
   )
 }
 
+export function MobileActionBar() {
+  return (
+    <div className="flex items-center justify-around py-3 px-4 rounded-xl bg-secondary/50 border border-primary/20">
+      <div className="flex items-center gap-2">
+        <ShareButton />
+        <span className="text-xs text-secondary">分享文章</span>
+      </div>
+      <div className="h-4 w-px bg-primary/20" />
+      <div className="flex items-center gap-2">
+        <DonateButton />
+        <span className="text-xs text-secondary">赞赏作者</span>
+      </div>
+    </div>
+  )
+}
+
 function ShareButton() {
   const postSlug = useAtomValue(metaSlugAtom)
   const postTitle = useAtomValue(metaTitleAtom)
