@@ -15,7 +15,7 @@ export function FallbackBackground() {
       className="fixed inset-0 pointer-events-none"
       style={{
         zIndex: 0,
-        backgroundColor: isDark ? '#000212' : '#fafafa',
+        backgroundColor: 'transparent',
         backgroundImage: isDark
           ? [
               'radial-gradient(ellipse at 20% 50%, rgba(var(--color-accent), 0.08) 0%, transparent 50%)',

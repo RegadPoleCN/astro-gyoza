@@ -30,11 +30,12 @@ interface Particle {
   rotationSpeed: number
   acceleration: number
   accelerationPhase: number
+  history?: Array<{ x: number; y: number }>
 }
 
 const MOBILE_BREAKPOINT = 768
-const MIN_MOBILE_PARTICLES = 30
-const MAX_MOBILE_PARTICLES = 50
+const MIN_MOBILE_PARTICLES = 12
+const MAX_MOBILE_PARTICLES = 18
 const DEFAULT_DESKTOP_PARTICLES = 100
 const FPS_SAMPLE_SIZE = 60
 const LERP_FACTOR = 0.05
@@ -59,7 +60,6 @@ const ROTATION_SPEED_MAX = 0.02
 const ACCELERATION_PHASE_INCREMENT = 0.02
 const ACCELERATION_AMPLITUDE = 0.03
 const DRIFT_BASE_AMPLITUDE = 0.5
-const PARALLAX_FACTOR = 0.3
 
 function lerp(current: number, target: number, factor: number): number {
   return current + (target - current) * factor
@@ -68,6 +68,32 @@ function lerp(current: number, target: number, factor: number): number {
 function resolveTheme(theme: string): 'dark' | 'light' {
   if (theme === 'dark' || theme === 'light') return theme
   return getSystemTheme()
+}
+
+function getDispersedX(
+  canvasWidth: number,
+  existingParticles: Particle[],
+  bucketCount: number
+): number {
+  if (bucketCount <= 1 || existingParticles.length === 0) {
+    return Math.random() * canvasWidth
+  }
+  const bucketWidth = canvasWidth / bucketCount
+  const counts = new Array(bucketCount).fill(0)
+  for (let i = 0; i < existingParticles.length; i++) {
+    const idx = Math.min(bucketCount - 1, Math.max(0, Math.floor(existingParticles[i].x / bucketWidth)))
+    counts[idx]++
+  }
+
+  let minIdx = 0
+  for (let i = 1; i < bucketCount; i++) {
+    if (counts[i] < counts[minIdx]) {
+      minIdx = i
+    }
+  }
+
+  const jitter = (Math.random() * 0.8 + 0.1) * bucketWidth
+  return minIdx * bucketWidth + jitter
 }
 
 function createParticle(
@@ -79,13 +105,15 @@ function createParticle(
     minSpeed: number
     maxSpeed: number
     opacity: number
-  }
+  },
+  initialX?: number,
+  initialY?: number
 ): Particle {
   const size = config.minSize + Math.random() * (config.maxSize - config.minSize)
   const speedY = config.minSpeed + Math.random() * (config.maxSpeed - config.minSpeed)
   return {
-    x: Math.random() * canvasWidth,
-    y: Math.random() * canvasHeight,
+    x: initialX !== undefined ? initialX : Math.random() * canvasWidth,
+    y: initialY !== undefined ? initialY : Math.random() * canvasHeight,
     size,
     targetSize: size,
     speedY,
@@ -98,6 +126,7 @@ function createParticle(
     rotationSpeed: (Math.random() - 0.5) * ROTATION_SPEED_MAX,
     acceleration: 0,
     accelerationPhase: Math.random() * Math.PI * 2,
+    history: [],
   }
 }
 
@@ -153,14 +182,6 @@ function drawCircleShape(
   ctx.arc(x, y, size / 2, 0, Math.PI * 2)
   ctx.fillStyle = color
   ctx.fill()
-
-  if (size > 2) {
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, size / 2)
-    gradient.addColorStop(0, replaceAlpha(color, (opacity * 0.8).toString()))
-    gradient.addColorStop(1, replaceAlpha(color, '0'))
-    ctx.fillStyle = gradient
-    ctx.fill()
-  }
   ctx.restore()
 }
 
@@ -346,8 +367,8 @@ export function ParticleBackground() {
   const currentAdaptiveCountRef = useRef<number>(0)
   const lastAdjustTimeRef = useRef<number>(0)
   const isDegradedRef = useRef<boolean>(false)
-  const scrollYRef = useRef(0)
-  const tickingRef = useRef(false)
+  const scrollDeltaYRef = useRef(0)
+  const lastScrollYRef = useRef(0)
 
   const backgroundConfig = useAtomValue(backgroundAtom)
   const particleConfig = useAtomValue(particleConfigAtom)
@@ -374,12 +395,17 @@ export function ParticleBackground() {
     (canvasWidth: number, canvasHeight: number) => {
       const config = particleConfigRef.current
       const count = isMobile
-        ? MIN_MOBILE_PARTICLES + Math.floor(Math.random() * (MAX_MOBILE_PARTICLES - MIN_MOBILE_PARTICLES))
+        ? Math.max(MIN_MOBILE_PARTICLES, Math.min(MAX_MOBILE_PARTICLES, Math.floor(canvasWidth / 25)))
         : config.count || DEFAULT_DESKTOP_PARTICLES
 
+      const bucketCount = isMobile ? 6 : 18
       const particles: Particle[] = []
       for (let i = 0; i < count; i++) {
-        particles.push(createParticle(canvasWidth, canvasHeight, config))
+        const bucketIndex = i % bucketCount
+        const bucketWidth = canvasWidth / bucketCount
+        const initialX = bucketIndex * bucketWidth + Math.random() * bucketWidth
+        const initialY = Math.random() * canvasHeight
+        particles.push(createParticle(canvasWidth, canvasHeight, config, initialX, initialY))
       }
       particlesRef.current = particles
       currentAdaptiveCountRef.current = count
@@ -403,22 +429,41 @@ export function ParticleBackground() {
     particle.accelerationPhase += ACCELERATION_PHASE_INCREMENT
     particle.acceleration = Math.sin(particle.accelerationPhase) * ACCELERATION_AMPLITUDE
 
-    particle.y += particle.speedY + particle.acceleration
+    // 桌面端内部分层视差响应（基于粒子大小比例模拟 Z 轴纵深），不改动 DOM Canvas
+    let parallaxY = 0
+    if (!isMobile && scrollDeltaYRef.current !== 0) {
+      const sizeSpan = Math.max(1, config.maxSize - config.minSize)
+      const depthRatio = Math.max(0, Math.min(1, (particle.size - config.minSize) / sizeSpan))
+      const parallaxSpeed = 0.02 + depthRatio * 0.06
+      parallaxY = -scrollDeltaYRef.current * parallaxSpeed
+    }
+
+    particle.y += particle.speedY + particle.acceleration + parallaxY
     particle.drift += particle.driftSpeed
     particle.x += particle.speedX + Math.sin(particle.drift) * DRIFT_BASE_AMPLITUDE * driftAmplitude
     particle.rotation += particle.rotationSpeed * rotationSpeedMultiplier
 
+    const bucketCount = isMobile ? 6 : 18
+
+    // 双向无缝环绕（向下落出或向上冲出均平滑回归对立边缘）
     if (particle.y > canvasHeight + particle.size) {
       particle.y = -particle.size
-      particle.x = Math.random() * canvasWidth
+      particle.x = getDispersedX(canvasWidth, particlesRef.current, bucketCount)
+      particle.history = []
+    } else if (particle.y < -particle.size) {
+      particle.y = canvasHeight + particle.size
+      particle.x = getDispersedX(canvasWidth, particlesRef.current, bucketCount)
+      particle.history = []
     }
 
     if (particle.x > canvasWidth + particle.size) {
       particle.x = -particle.size
+      particle.history = []
     } else if (particle.x < -particle.size) {
       particle.x = canvasWidth + particle.size
+      particle.history = []
     }
-  }, [])
+  }, [isMobile])
 
   const animate = useCallback(() => {
     const canvas = canvasRef.current
@@ -486,35 +531,63 @@ export function ParticleBackground() {
     const trailEnabled = particleConfigRef.current.trailEnabled === true
     const glowEnabled = particleConfigRef.current.glowEnabled !== false
 
-    if (trailEnabled) {
-      const isDark = resolvedThemeRef.current === 'dark'
-      ctx.fillStyle = `rgba(${isDark ? '0,2,18' : '250,250,250'}, 0.05)`
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-    } else {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-    }
+    // 画布始终保持 100% 透明清除，绝不对整个全屏填充不透明矩形
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     const sortedParticles = [...particlesRef.current].sort((a, b) => a.size - b.size)
 
+    // 只要开启了运动轨迹，记录粒子过去坐标；未开启时清空历史
     particlesRef.current.forEach((particle) => {
       updateParticle(particle, canvas.width, canvas.height)
+      if (trailEnabled) {
+        if (!particle.history) particle.history = []
+        particle.history.push({ x: particle.x, y: particle.y })
+        if (particle.history.length > 8) {
+          particle.history.shift()
+        }
+      } else if (particle.history && particle.history.length > 0) {
+        particle.history = []
+      }
     })
+
+    // 每帧消费完毕瞬时滚动差量后清零，杜绝漂移
+    scrollDeltaYRef.current = 0
 
     sortedParticles.forEach((particle) => {
       const shape = particleConfigRef.current.shape || 'circle'
       const color = getParticleColor(resolvedThemeRef.current, particleConfigRef.current.color, particle.opacity)
       const drawer = shapeDrawers[shape] || shapeDrawers.circle
 
-      if (!glowEnabled) {
+      // 如果启用了运动轨迹，绘制粒子自身的渐隐拖尾线条，保持背景完全透明
+      if (trailEnabled && particle.history && particle.history.length > 1) {
+        ctx.save()
+        for (let i = 0; i < particle.history.length - 1; i++) {
+          const p1 = particle.history[i]
+          const p2 = particle.history[i + 1]
+          const trailAlpha = ((i + 1) / particle.history.length) * particle.opacity * 0.6
+          ctx.beginPath()
+          ctx.moveTo(p1.x, p1.y)
+          ctx.lineTo(p2.x, p2.y)
+          ctx.strokeStyle = replaceAlpha(color, trailAlpha.toString())
+          ctx.lineWidth = Math.max(1, particle.size * 0.6)
+          ctx.lineCap = 'round'
+          ctx.stroke()
+        }
+        ctx.restore()
+      }
+
+      if (glowEnabled) {
+        ctx.save()
+        ctx.shadowColor = color
+        ctx.shadowBlur = Math.max(4, particle.size * 1.5)
+      } else {
         ctx.save()
         ctx.shadowBlur = 0
       }
 
       drawer(ctx, particle.x, particle.y, particle.size, particle.rotation, color, particle.opacity)
 
-      if (!glowEnabled) {
-        ctx.restore()
-      }
+      ctx.restore()
     })
 
     animationFrameRef.current = requestAnimationFrame(loopFnRef.current!)
@@ -545,18 +618,23 @@ export function ParticleBackground() {
       reducedMotionRef.current = e.matches
     }
 
-    const parallaxFactor = PARALLAX_FACTOR
+    lastScrollYRef.current = window.scrollY
 
     const handleScroll = () => {
-      scrollYRef.current = window.scrollY
-      if (!tickingRef.current) {
-        requestAnimationFrame(() => {
-          if (!reducedMotionRef.current) {
-            canvas.style.transform = `translateY(${scrollYRef.current * parallaxFactor}px) translateZ(0)`
-          }
-          tickingRef.current = false
-        })
-        tickingRef.current = true
+      const currentScrollY = window.scrollY
+      scrollDeltaYRef.current = currentScrollY - lastScrollYRef.current
+      lastScrollYRef.current = currentScrollY
+    }
+
+    // 切后台 / 锁屏自动休眠与唤醒
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(animationFrameRef.current)
+      } else {
+        lastTimeRef.current = performance.now()
+        lastScrollYRef.current = window.scrollY
+        scrollDeltaYRef.current = 0
+        animationFrameRef.current = requestAnimationFrame(loopFnRef.current!)
       }
     }
 
@@ -565,8 +643,8 @@ export function ParticleBackground() {
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     motionQuery.addEventListener('change', handleReducedMotionChange)
     window.addEventListener('resize', handleResize)
-
     window.addEventListener('scroll', handleScroll, { passive: true })
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     initParticles(canvas.width, canvas.height)
 
@@ -577,8 +655,8 @@ export function ParticleBackground() {
       cancelAnimationFrame(animationFrameRef.current)
       window.removeEventListener('resize', handleResize)
       window.removeEventListener('scroll', handleScroll)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       motionQuery.removeEventListener('change', handleReducedMotionChange)
-      canvas.style.transform = ''
       const ctx = canvas.getContext('2d')
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -591,7 +669,7 @@ export function ParticleBackground() {
       isDegradedRef.current = false
       setPerformanceDegraded(false)
     }
-  }, [backgroundConfig.enabled, backgroundConfig.mode, initParticles, isMobile])
+  }, [backgroundConfig.enabled, backgroundConfig.mode, initParticles])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -633,7 +711,7 @@ export function ParticleBackground() {
 
     if (particleConfig.count !== prev.count) {
       const targetCount = isMobile
-        ? MIN_MOBILE_PARTICLES + Math.floor(Math.random() * (MAX_MOBILE_PARTICLES - MIN_MOBILE_PARTICLES))
+        ? Math.max(MIN_MOBILE_PARTICLES, Math.min(MAX_MOBILE_PARTICLES, Math.floor(canvas.width / 25)))
         : particleConfig.count || DEFAULT_DESKTOP_PARTICLES
 
       if (particles.length < targetCount) {
