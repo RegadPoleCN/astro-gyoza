@@ -12,7 +12,6 @@ import {
   clickEffectSpreadAtom,
   clickEffectGravityAtom,
   clickEffectFadeOutAtom,
-  clickEffectTrailEnabledAtom,
   type ClickEffectType,
 } from '@/store/clickEffects'
 
@@ -35,7 +34,6 @@ export function ClickControls() {
   const [spread, setSpread] = useAtom(clickEffectSpreadAtom)
   const [gravity, setGravity] = useAtom(clickEffectGravityAtom)
   const [fadeOut, setFadeOut] = useAtom(clickEffectFadeOutAtom)
-  const [trailEnabled, setTrailEnabled] = useAtom(clickEffectTrailEnabledAtom)
 
   return (
     <div className="space-y-5">
@@ -111,16 +109,6 @@ export function ClickControls() {
               checked={fadeOut}
               onChange={() => setFadeOut(!fadeOut)}
               ariaLabel="切换淡出效果"
-              size="sm"
-            />
-          </div>
-
-          <div className="rounded-xl bg-zinc-100/60 px-4 py-3 dark:bg-zinc-800/60">
-            <ToggleSwitch
-              label="运动轨迹"
-              checked={trailEnabled}
-              onChange={() => setTrailEnabled(!trailEnabled)}
-              ariaLabel="切换运动轨迹"
               size="sm"
             />
           </div>
