@@ -307,7 +307,7 @@ export function BackgroundConfig() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:justify-center sm:p-4"
+            className="fixed inset-0 z-50 flex items-end justify-center p-0 pb-[env(safe-area-inset-bottom,0px)] sm:items-center sm:justify-center sm:p-4 bg-black/20 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -316,17 +316,22 @@ export function BackgroundConfig() {
             }}
           >
             <motion.div
-              className="relative w-full max-w-md overflow-hidden rounded-t-2xl border-t border-zinc-200/20 bg-white/70 shadow-2xl backdrop-blur-xl dark:border-zinc-700/30 dark:bg-zinc-900/70 sm:w-full sm:rounded-2xl sm:border"
+              className="relative w-full max-w-lg max-h-[85vh] sm:max-h-[80vh] flex flex-col overflow-hidden rounded-t-3xl sm:rounded-2xl border-t sm:border border-zinc-200/30 bg-white/90 shadow-2xl backdrop-blur-2xl dark:border-zinc-700/40 dark:bg-zinc-900/90"
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-zinc-200/20 px-5 py-4 dark:border-zinc-700/30">
-                <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+              {/* 移动端顶部下拉手柄 Handle */}
+              <div className="flex sm:hidden justify-center pt-3 pb-1">
+                <div className="h-1.5 w-12 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+              </div>
+
+              <div className="flex items-center justify-between border-b border-zinc-200/20 px-5 py-3.5 dark:border-zinc-700/30 shrink-0">
+                <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 flex items-center">
                   🎨 背景配置
-                  <span className="ml-2 text-xs font-normal text-zinc-400 dark:text-zinc-500">
+                  <span className="ml-2 text-xs font-normal text-zinc-400 dark:text-zinc-500 hidden sm:inline">
                     Ctrl+B
                   </span>
                 </h2>
@@ -352,7 +357,7 @@ export function BackgroundConfig() {
                 </button>
               </div>
 
-              <div className="max-h-[70vh] overflow-y-auto px-5 py-4">
+              <div className="overflow-y-auto px-5 py-4 overscroll-contain flex-1">
 
                 <div className="mb-4 flex gap-1 rounded-xl bg-zinc-200/60 p-1 dark:bg-zinc-800/60">
                   <button
@@ -553,15 +558,29 @@ const BackgroundConfigTrigger = React.forwardRef<HTMLButtonElement, {
 }>(function BackgroundConfigTrigger({ onClick, onLongPress }, ref) {
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isLongPressRef = useRef(false)
+  const startPosRef = useRef({ x: 0, y: 0 })
 
-  const handlePointerDown = () => {
+  const handlePointerDown = (e: React.PointerEvent) => {
     isLongPressRef.current = false
+    startPosRef.current = { x: e.clientX, y: e.clientY }
     if (onLongPress) {
       longPressTimerRef.current = setTimeout(() => {
         isLongPressRef.current = true
         onLongPress()
         if (navigator.vibrate) navigator.vibrate(50)
-      }, 500)
+      }, 600)
+    }
+  }
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    // 若移动超过 10 像素则判定为页面滑动，取消长按
+    const dx = Math.abs(e.clientX - startPosRef.current.x)
+    const dy = Math.abs(e.clientY - startPosRef.current.y)
+    if (dx > 10 || dy > 10) {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current)
+        longPressTimerRef.current = null
+      }
     }
   }
 
@@ -570,16 +589,15 @@ const BackgroundConfigTrigger = React.forwardRef<HTMLButtonElement, {
       clearTimeout(longPressTimerRef.current)
       longPressTimerRef.current = null
     }
+  }
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     if (!isLongPressRef.current) {
       onClick()
     }
-  }
-
-  const handlePointerLeave = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current)
-      longPressTimerRef.current = null
-    }
+    isLongPressRef.current = false
   }
 
   useEffect(() => {
@@ -591,12 +609,13 @@ const BackgroundConfigTrigger = React.forwardRef<HTMLButtonElement, {
   return (
     <motion.button
       ref={ref}
-      className="fixed right-4 bottom-20 z-40 flex size-12 items-center justify-center rounded-full border border-primary bg-white/50 shadow-lg shadow-zinc-800/5 backdrop-blur transition-shadow hover:shadow-xl dark:bg-zinc-800/50"
+      className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] z-40 flex size-12 items-center justify-center rounded-full border border-primary bg-white/50 shadow-lg shadow-zinc-800/5 backdrop-blur transition-shadow hover:shadow-xl dark:bg-zinc-800/50"
       type="button"
       aria-label="打开背景配置（长按快速切换）"
       onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerLeave={handlePointerLeave}
+      onClick={handleClick}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
       initial={{ opacity: 0, scale: 0 }}
