@@ -154,5 +154,16 @@
     "server": "netease",
     "type": "playlist",
     "id": "60192"
+  },
+  "background": {
+    "image": "/bg.jpg",
+    "light": {
+      "brightness": 1.0,
+      "overlayOpacity": 0.1
+    },
+    "dark": {
+      "brightness": 0.6,
+      "overlayOpacity": 0.45
+    }
   }
 }

@@ -1,0 +1,56 @@
+---
+import config from '@/config.json'
+
+const bgConfig = (config as any).background || {
+  image: '/bg.jpg',
+  light: { brightness: 1.0, overlayOpacity: 0.1 },
+  dark: { brightness: 0.6, overlayOpacity: 0.45 },
+}
+
+const lightBrightness = bgConfig.light?.brightness ?? 1.0
+const lightOverlay = bgConfig.light?.overlayOpacity ?? 0.1
+const darkBrightness = bgConfig.dark?.brightness ?? 0.6
+const darkOverlay = bgConfig.dark?.overlayOpacity ?? 0.45
+const bgImage = bgConfig.image || '/bg.jpg'
+---
+
+<div
+  class="fixed inset-0 pointer-events-none select-none overflow-hidden"
+  style="z-index: -2;"
+  aria-hidden="true"
+  role="presentation"
+>
+  <img
+    src={bgImage}
+    alt="Site Background"
+    class="w-full h-full object-cover object-center transition-all duration-500 ease-out wallpaper-image"
+    loading="eager"
+    decoding="async"
+  />
+  <div class="absolute inset-0 transition-colors duration-500 wallpaper-overlay"></div>
+</div>
+
+<style
+  define:vars={{
+    lightBrightness,
+    lightOverlay,
+    darkBrightness,
+    darkOverlay,
+  }}
+>
+  .wallpaper-image {
+    filter: brightness(var(--lightBrightness));
+  }
+
+  .wallpaper-overlay {
+    background-color: rgba(255, 255, 255, var(--lightOverlay));
+  }
+
+  :global([data-theme='dark']) .wallpaper-image {
+    filter: brightness(var(--darkBrightness)) contrast(1.05);
+  }
+
+  :global([data-theme='dark']) .wallpaper-overlay {
+    background-color: rgba(10, 10, 15, var(--darkOverlay));
+  }
+</style>

@@ -11,7 +11,7 @@ import { ToastContainer } from '@/components/ToastContainer'
 import { ModalStack } from '@/components/ui/modal'
 import { ParticleBackground } from '@/components/ParticleBackground'
 import { ClickEffects } from '@/components/ClickEffects'
-import { BackgroundConfig } from '@/components/BackgroundConfig'
+import WallpaperBackground from '@/components/WallpaperBackground.astro'
 import { site } from '@/config.json'
 import '@/styles/global.css'
 
@@ -34,12 +34,12 @@ const { title, description, image } = Astro.props
     <PrintVersion />
   </head>
   <body>
+    <WallpaperBackground />
     <ParticleBackground client:idle />
     <ClickEffects client:idle />
     <slot />
     <BackToTopFAB client:only="react" />
     <ToastContainer client:only="react" />
     <ModalStack client:only="react" />
-    <BackgroundConfig client:load />
   </body>
 </html>
