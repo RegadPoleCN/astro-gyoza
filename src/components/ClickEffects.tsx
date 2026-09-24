@@ -1,14 +1,11 @@
 import { useAtomValue } from 'jotai'
 import { useEffect, useRef, useCallback } from 'react'
-import { clickEffectAtom, type ClickEffectType } from '@/store/clickEffects'
 import { themeAtom } from '@/store/theme'
 import { getSystemTheme } from '@/utils/theme'
 
 interface Particle {
   x: number
   y: number
-  prevX: number
-  prevY: number
   vx: number
   vy: number
   life: number
@@ -19,135 +16,37 @@ interface Particle {
   rotationSpeed: number
 }
 
+// 严格固化的点击星芒特效参数
+const PARTICLE_COUNT = 10
+const PARTICLE_SIZE = 3.5
+const SPREAD_RADIUS = 45
+const PARTICLE_LIFE = 0.55 // 秒
+
 function resolveTheme(theme: string): 'dark' | 'light' {
   if (theme === 'dark' || theme === 'light') return theme
   return getSystemTheme()
 }
 
-function getDefaultColor(resolvedTheme: 'dark' | 'light', customColor: string): string {
-  if (customColor) return customColor
-  return resolvedTheme === 'dark' ? '#60a5fa' : '#3b82f6'
+function getThemeAccentColor(resolvedTheme: 'dark' | 'light'): string {
+  // 提取当前站点的强调色；深色偏暖金星光，浅色偏清亮青蓝
+  return resolvedTheme === 'dark' ? '#fcd34d' : '#38bdf8'
 }
 
-function createBurstParticles(
-  x: number, y: number, count: number, size: number, color: string, life: number, spread: number
-): Particle[] {
+function createSparkleParticles(x: number, y: number, color: string): Particle[] {
   const particles: Particle[] = []
-  for (let i = 0; i < count; i++) {
-    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4
-    const speed = size * 0.5 * spread + Math.random() * size * spread
-    particles.push({
-      x, y,
-      prevX: x,
-      prevY: y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: life,
-      maxLife: life,
-      size: size * 0.4 + Math.random() * size * 0.6,
-      color,
-      rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: (Math.random() - 0.5) * 0.15,
-    })
-  }
-  return particles
-}
-
-function createRippleParticles(
-  x: number, y: number, count: number, size: number, color: string, life: number, spread: number
-): Particle[] {
-  const particles: Particle[] = []
-  for (let i = 0; i < count; i++) {
-    const dist = 10 * spread + i * (size * 3 * spread)
-    const arcParticles = 3
-    for (let j = 0; j < arcParticles; j++) {
-      const angle = (j / arcParticles) * Math.PI * 2 + (i * 0.3)
-      particles.push({
-        x: x + Math.cos(angle) * dist * 0.2,
-        y: y + Math.sin(angle) * dist * 0.2,
-        prevX: x + Math.cos(angle) * dist * 0.2,
-        prevY: y + Math.sin(angle) * dist * 0.2,
-        vx: Math.cos(angle) * (1 + i * 0.6) * spread,
-        vy: Math.sin(angle) * (1 + i * 0.6) * spread,
-        life: life * (1 - i / count),
-        maxLife: life,
-        size: size * 0.5 + Math.random() * size * 0.5,
-        color,
-        rotation: 0,
-        rotationSpeed: 0,
-      })
-    }
-  }
-  return particles
-}
-
-function createSparkleParticles(
-  x: number, y: number, count: number, size: number, color: string, life: number, spread: number
-): Particle[] {
-  const particles: Particle[] = []
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
     const angle = Math.random() * Math.PI * 2
-    const dist = Math.random() * size * 5 * spread
+    const dist = Math.random() * SPREAD_RADIUS
+    const particleColor = Math.random() > 0.4 ? color : '#ffffff'
     particles.push({
-      x: x + Math.cos(angle) * dist,
-      y: y + Math.sin(angle) * dist,
-      prevX: x + Math.cos(angle) * dist,
-      prevY: y + Math.sin(angle) * dist,
-      vx: (Math.random() - 0.5) * 0.3 * spread,
-      vy: (Math.random() - 0.5) * 0.3 * spread - 0.5,
-      life: life * (0.5 + Math.random() * 0.5),
-      maxLife: life,
-      size: size * 0.2 + Math.random() * size * 0.5,
-      color: Math.random() > 0.5 ? color : '#ffd700',
-      rotation: 0,
-      rotationSpeed: (Math.random() - 0.5) * 0.1,
-    })
-  }
-  return particles
-}
-
-function createBubbleParticles(
-  x: number, y: number, count: number, size: number, color: string, life: number, spread: number
-): Particle[] {
-  const particles: Particle[] = []
-  for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2
-    const speed = size * 0.3 * spread + Math.random() * size * 0.5 * spread
-    particles.push({
-      x, y,
-      prevX: x,
-      prevY: y,
-      vx: Math.cos(angle) * speed * 0.3,
-      vy: Math.sin(angle) * speed * 0.3 - speed,
-      life: life,
-      maxLife: life,
-      size: size * 0.5 + Math.random() * size,
-      color: color + '80',
-      rotation: 0,
-      rotationSpeed: (Math.random() - 0.5) * 0.05,
-    })
-  }
-  return particles
-}
-
-function createConfettiParticles(
-  x: number, y: number, count: number, size: number, color: string, life: number, spread: number
-): Particle[] {
-  const colors = ['#f87171', '#fb923c', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa', '#f472b6']
-  const particles: Particle[] = []
-  for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2
-    const speed = size * 0.5 * spread + Math.random() * size * spread
-    particles.push({
-      x, y,
-      prevX: x,
-      prevY: y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - size * 0.3,
-      life: life * (0.8 + Math.random() * 0.4),
-      maxLife: life,
-      size: size * 0.5 + Math.random() * size,
-      color: color || colors[Math.floor(Math.random() * colors.length)],
+      x: x + Math.cos(angle) * (dist * 0.3),
+      y: y + Math.sin(angle) * (dist * 0.3),
+      vx: Math.cos(angle) * (Math.random() * 1.5 + 0.5),
+      vy: Math.sin(angle) * (Math.random() * 1.5 + 0.5) - 0.4,
+      life: PARTICLE_LIFE * (0.6 + Math.random() * 0.4),
+      maxLife: PARTICLE_LIFE,
+      size: PARTICLE_SIZE * (0.6 + Math.random() * 0.6),
+      color: particleColor,
       rotation: Math.random() * Math.PI * 2,
       rotationSpeed: (Math.random() - 0.5) * 0.2,
     })
@@ -155,107 +54,64 @@ function createConfettiParticles(
   return particles
 }
 
-function createFireworkParticles(
-  x: number, y: number, count: number, size: number, color: string, life: number, spread: number
-): Particle[] {
-  const colors = color ? [color, color + 'cc', color + '88'] : ['#fbbf24', '#f87171', '#60a5fa', '#a78bfa', '#34d399']
-  const particles: Particle[] = []
-  for (let i = 0; i < count; i++) {
-    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.2
-    const speed = size * spread + Math.random() * size * 1.5 * spread
-    particles.push({
-      x, y,
-      prevX: x,
-      prevY: y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: life * (0.6 + Math.random() * 0.4),
-      maxLife: life,
-      size: size * 0.3 + Math.random() * size * 0.7,
-      color: color || colors[Math.floor(Math.random() * colors.length)],
-      rotation: 0,
-      rotationSpeed: 0,
-    })
-  }
-  return particles
-}
-
-type EffectCreator = (x: number, y: number, count: number, size: number, color: string, life: number, spread: number) => Particle[]
-
-const effectCreators: Record<ClickEffectType, EffectCreator> = {
-  burst: createBurstParticles,
-  ripple: createRippleParticles,
-  sparkle: createSparkleParticles,
-  bubble: createBubbleParticles,
-  confetti: createConfettiParticles,
-  firework: createFireworkParticles,
-}
-
 export function ClickEffects() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<Particle[]>([])
   const animationRef = useRef<number>(0)
   const loopRef = useRef<(() => void) | null>(null)
-  const configRef = useRef(useAtomValue(clickEffectAtom))
-  const themeRef = useRef<'dark' | 'light'>(resolveTheme(useAtomValue(themeAtom)))
-
-  const config = useAtomValue(clickEffectAtom)
   const theme = useAtomValue(themeAtom)
+  const themeRef = useRef(resolveTheme(theme))
 
-  configRef.current = config
-  themeRef.current = resolveTheme(theme)
+  useEffect(() => {
+    themeRef.current = resolveTheme(theme)
+  }, [theme])
 
   const animate = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    const cfg = configRef.current
-    const gravity = cfg.gravity
-    const trailEnabled = cfg.trailEnabled
+    const particles = particlesRef.current
 
-    particlesRef.current = particlesRef.current.filter(p => {
-      p.prevX = p.x
-      p.prevY = p.y
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i]
+      p.life -= 1 / 60
+      if (p.life <= 0) {
+        particles.splice(i, 1)
+        continue
+      }
+
       p.x += p.vx
       p.y += p.vy
-      p.vy += gravity * 0.3
-      p.life -= 0.016
+      p.vy += 0.05 // 轻微重力
+      p.vx *= 0.98 // 轻微阻尼
       p.rotation += p.rotationSpeed
-      return p.life > 0
-    })
 
-    if (trailEnabled) {
-      particlesRef.current.forEach(p => {
-        const alpha = cfg.fadeOut ? Math.max(0, p.life / p.maxLife) * 0.3 : 0.3
-        ctx.save()
-        ctx.globalAlpha = alpha
-        ctx.beginPath()
-        ctx.moveTo(p.prevX, p.prevY)
-        ctx.lineTo(p.x, p.y)
-        ctx.strokeStyle = p.color
-        ctx.lineWidth = p.size * 0.6
-        ctx.lineCap = 'round'
-        ctx.stroke()
-        ctx.restore()
-      })
-    }
+      const alpha = Math.max(0, p.life / p.maxLife)
 
-    particlesRef.current.forEach(p => {
-      const alpha = cfg.fadeOut ? Math.max(0, p.life / p.maxLife) : 1
       ctx.save()
       ctx.globalAlpha = alpha
+      ctx.shadowColor = p.color
+      ctx.shadowBlur = 4
       ctx.translate(p.x, p.y)
       ctx.rotate(p.rotation)
+
+      // 绘制 4 角星芒
+      const r = p.size
       ctx.beginPath()
-      ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2)
+      ctx.moveTo(0, -r)
+      ctx.quadraticCurveTo(0, 0, r, 0)
+      ctx.quadraticCurveTo(0, 0, 0, r)
+      ctx.quadraticCurveTo(0, 0, -r, 0)
+      ctx.quadraticCurveTo(0, 0, 0, -r)
       ctx.fillStyle = p.color
       ctx.fill()
       ctx.restore()
-    })
+    }
 
     animationRef.current = requestAnimationFrame(loopRef.current!)
   }, [])
@@ -277,11 +133,8 @@ export function ClickEffects() {
     }
 
     const handleClick = (e: MouseEvent) => {
-      const cfg = configRef.current
-      if (!cfg.enabled) return
-      const color = getDefaultColor(themeRef.current, cfg.color)
-      const creator = effectCreators[cfg.type] || effectCreators.burst
-      const newParticles = creator(e.clientX, e.clientY, cfg.count, cfg.size, color, cfg.life, cfg.spread)
+      const color = getThemeAccentColor(themeRef.current)
+      const newParticles = createSparkleParticles(e.clientX, e.clientY, color)
       particlesRef.current.push(...newParticles)
     }
 
