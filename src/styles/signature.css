@@ -1,30 +1,53 @@
+.animated-signature svg {
+  height: 50px;
+  width: auto;
+  max-width: 220px;
+  display: block;
+}
+
 .animated-signature path {
-  stroke-dasharray: 2400;
-  stroke-dashoffset: 2400;
+  stroke-dasharray: 6624;
+  stroke-dashoffset: 6624;
   fill: transparent;
-  animation: drawSignature 8s linear infinite both;
-  stroke-width: 2px;
-  stroke: theme('textColor.primary');
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* 浅色模式下：清爽深邃 Accent，配合柔光 */
+  stroke: theme('colors.accent');
+  filter: drop-shadow(0 0 3px theme('colors.accent / 50%'));
+  animation: drawSignature 7s ease-in-out infinite both;
+  transition:
+    stroke 0.3s ease,
+    filter 0.3s ease;
+}
+
+/* 深色模式下：霓虹高亮发光！告别死黑色，产生强烈星芒光晕 */
+:global([data-theme='dark']) .animated-signature path,
+[data-theme='dark'] .animated-signature path {
+  stroke: #7dd3fc; /* 极清透的荧光天蓝/亮青 */
+  filter: drop-shadow(0 0 2px #38bdf8) drop-shadow(0 0 8px rgba(56, 189, 248, 0.8))
+    drop-shadow(0 0 16px rgba(14, 165, 233, 0.5));
 }
 
 @keyframes drawSignature {
   0% {
-    stroke-dashoffset: 2400;
+    stroke-dashoffset: 6624;
+    opacity: 0;
   }
 
-  15% {
-    fill: transparent;
+  10% {
+    opacity: 1;
   }
 
-  35%,
-  75% {
+  40%,
+  80% {
     stroke-dashoffset: 0;
-    fill: theme('textColor.primary');
+    opacity: 1;
   }
 
-  90%,
-  to {
-    stroke-dashoffset: 2400;
-    fill: transparent;
+  95%,
+  100% {
+    stroke-dashoffset: 6624;
+    opacity: 0;
   }
 }
