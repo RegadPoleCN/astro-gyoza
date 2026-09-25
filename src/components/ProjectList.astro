@@ -9,21 +9,25 @@ const projects = await getCollection('projects')
     projects.map((project) => (
       <li>
         <a href={project.data.link} target="_blank" rel="noopener noreferrer external">
-          <div class="rounded-lg bg-accent/10 overflow-hidden group">
-            <div class="aspect-video overflow-hidden">
-              <img
-                class="size-full object-cover transition-transform group-hover:scale-110"
-                src={project.data.image}
-                alt={`Project cover: ${project.data.title}`}
-                loading="lazy"
-              />
-            </div>
-            <div class="p-4">
-              <div class="group-hover:text-accent">
-                <span class="text-xl font-bold">{project.data.title}</span>
-                <i class="ml-2 iconfont icon-external-link" />
+          <div class="rounded-xl glass-card hover:border-accent/40 transition-all duration-300 overflow-hidden group">
+            {project.data.image && (
+              <div class="aspect-video overflow-hidden border-b border-primary/10">
+                <img
+                  class="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  src={project.data.image}
+                  alt={`Project cover: ${project.data.title}`}
+                  loading="lazy"
+                />
               </div>
-              <p class="mt-2 text-sm line-clamp-2">{project.data.description}</p>
+            )}
+            <div class="p-5">
+              <div class="group-hover:text-accent transition-colors flex items-center justify-between">
+                <span class="text-lg font-bold">{project.data.title}</span>
+                <i class="iconfont icon-external-link text-sm opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+              </div>
+              <p class="mt-2 text-sm line-clamp-2 text-secondary leading-relaxed">
+                {project.data.description}
+              </p>
             </div>
           </div>
         </a>
