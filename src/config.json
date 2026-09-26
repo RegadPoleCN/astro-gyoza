@@ -127,7 +127,15 @@
     "serverURL": "https://waline.regadpole.top"
   },
   "sponsor": {
-    "wechat": ""
+    "description": "感谢您的支持，这将成为我前进的最大动力。",
+    "qrcode": "",
+    "links": [
+      {
+        "name": "爱发电 (Afdian)",
+        "url": "https://afdian.com/a/RegadPole",
+        "icon": "icon-flash"
+      }
+    ]
   },
   "rss": {
     "follow": {
