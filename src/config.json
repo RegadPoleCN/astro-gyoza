@@ -173,5 +173,17 @@
       "brightness": 0.6,
       "overlayOpacity": 0.45
     }
+  },
+  "icp": {
+    "enable": true,
+    "text": "冀ICP备2024080157号-1",
+    "link": "https://beian.miit.gov.cn/",
+    "icon": true,
+    "police": {
+      "enable": false,
+      "text": "",
+      "link": "http://www.beian.gov.cn/portal/registerSystemInfo",
+      "icon": true
+    }
   }
 }

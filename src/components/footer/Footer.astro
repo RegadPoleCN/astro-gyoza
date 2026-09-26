@@ -1,10 +1,12 @@
 ---
 import { ThemeSwitch } from './ThemeSwitch'
-import { author, footer } from '@/config.json'
+import config from '@/config.json'
 import { getAllPostsWordCount } from '@/utils/content'
 import { RunningDays } from './RunningDays'
 import Link from './Link.astro'
 import FooterColumn from './FooterColumn.astro'
+
+const { author, footer, icp } = config as any
 
 const sinceYear = new Date(footer.startTime).getFullYear()
 const thisYear = new Date().getFullYear()
@@ -13,13 +15,18 @@ const copyDate = sinceYear === thisYear ? thisYear : `${sinceYear} - ${thisYear}
 const wordCount = await getAllPostsWordCount()
 
 const wordCountStr = (wordCount / 1000).toFixed(1) + 'k'
+
+const showIcp = icp?.enable && icp?.text && icp.text.trim() !== ''
+const showPolice = icp?.police?.enable && icp?.police?.text && icp.police.text.trim() !== ''
 ---
 
-<footer class="relative z-1 py-8 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] px-4 md:px-8 glass-card border-t border-primary text-secondary text-sm">
+<footer
+  class="relative z-1 py-8 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] px-4 md:px-8 glass-card border-t border-primary text-secondary text-sm"
+>
   {
     footer.columns && footer.columns.length > 0 && (
       <div class="mb-6 mx-auto w-full max-w-[640px] grid grid-cols-3 gap-2 md:gap-8 text-center md:text-left">
-        {footer.columns.map((column) => (
+        {footer.columns.map((column: any) => (
           <FooterColumn title={column.title} links={column.links} />
         ))}
       </div>
@@ -51,6 +58,66 @@ const wordCountStr = (wordCount / 1000).toFixed(1) + 'k'
       <span class="select-none opacity-40">|</span>
       <span>共嘚嘚了 {wordCountStr} 字</span>
     </div>
+
+    {
+      (showIcp || showPolice) && (
+        <div class="pt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-secondary/70">
+          {showIcp && (
+            <a
+              href={icp.link || 'https://beian.miit.gov.cn/'}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1 hover:text-accent transition-colors"
+            >
+              {icp.icon !== false && (
+                <svg
+                  class="size-3.5 inline-block text-accent/80 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  />
+                </svg>
+              )}
+              <span>{icp.text}</span>
+            </a>
+          )}
+
+          {showIcp && showPolice && <span class="opacity-30 select-none">·</span>}
+
+          {showPolice && (
+            <a
+              href={icp.police.link || 'http://www.beian.gov.cn/portal/registerSystemInfo'}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1 hover:text-accent transition-colors"
+            >
+              {icp.police.icon !== false && (
+                <svg
+                  class="size-3.5 inline-block text-accent/80 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+                  />
+                </svg>
+              )}
+              <span>{icp.police.text}</span>
+            </a>
+          )}
+        </div>
+      )
+    }
   </div>
   <div class="mt-4 flex justify-center">
     <ThemeSwitch client:only="react" />
